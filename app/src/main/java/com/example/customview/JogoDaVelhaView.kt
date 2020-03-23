@@ -11,6 +11,8 @@ import android.view.GestureDetector
 import android.view.ViewGroup
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
+import android.os.Parcelable
+import android.os.Parcel
 
 
 class JogoDaVelhaView @JvmOverloads constructor(
@@ -176,6 +178,48 @@ class JogoDaVelhaView @JvmOverloads constructor(
     fun reiniciarJogo() {
         mTabuleiro = Array(3) { IntArray(3) }
         invalidate()
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        val p = super.onSaveInstanceState()
+        return EstadoJogo(p, mVez, mTabuleiro)
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable) {
+        val estado = state as EstadoJogo
+        super.onRestoreInstanceState(estado.superState)
+        mVez = estado.vez
+        mTabuleiro = estado.tabuleiro
+        invalidate()
+    }
+
+    class EstadoJogo : BaseSavedState {
+        var vez: Int = 0
+        var tabuleiro: Array<IntArray>
+
+
+        constructor(p: Parcelable?, vez: Int, tabuleiro: Array<IntArray>) : super(p) {
+            this.vez = vez
+            this.tabuleiro = tabuleiro
+        }
+
+        constructor(p: Parcel?) : super(p) {
+            vez = p?.readInt() ?: XIS
+            tabuleiro = Array(3) { IntArray(3) }
+            tabuleiro.forEach { p?.readIntArray(it) }
+
+        }
+
+        override fun writeToParcel(parcel: Parcel?, flags: Int) {
+            super.writeToParcel(parcel, flags)
+            parcel?.writeInt(vez)
+            tabuleiro.forEach { parcel?.writeIntArray(it) }
+        }
+
+        companion object CREATOR : Parcelable.Creator<EstadoJogo> {
+            override fun createFromParcel(source: Parcel?) = EstadoJogo(source)
+            override fun newArray(size: Int) = arrayOf<EstadoJogo>()
+        }
     }
 
 
